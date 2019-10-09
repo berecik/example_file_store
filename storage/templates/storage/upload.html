@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load bootstrap4 %}
+
+{% block title %}Upload File{% endblock %}
+
+{% block media %}
+    {{ block.super }}
+{% endblock media %}
+
+{% block javascript %}
+    {{ block.super }}
+    <script>
+        $(document).ready(function () {
+
+            function setProgress(progress) {
+                $('#progressBar').css('width', progress + '%').text(progress + '%');
+            }
+
+            function resetProgress() {
+                $('#progress_id').hide();
+                setProgress(0);
+            }
+
+            function resetForm() {
+                resetProgress();
+                $('form')[0].reset();
+            }
+
+            resetProgress();
+
+            $('form').on('submit', function (event) {
+
+                event.preventDefault();
+
+                let formData = new FormData($('form')[0]);
+
+                $.ajax({
+                    xhr: function () {
+                        var xhr = new window.XMLHttpRequest();
+
+                        xhr.upload.addEventListener('progress', function (e) {
+
+                            if (e.lengthComputable) {
+                                $('#progress_id').show();
+                                var percent = Math.round((e.loaded / e.total) * 100);
+                                setProgress(percent);
+                            }
+                        });
+
+                        return xhr;
+                    },
+                    type: 'POST',
+                    url: '.',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        console.log(data);
+                        resetForm();
+                        $('#main').append($(
+                           '<div class="message"><a href="' + data.url+ '">' + data.filename + '</a></div>'
+                        ));
+                    },
+                    error: function (data) {
+                        console.log(data);
+                        resetProgress();
+                    }
+                });
+
+            });
+
+        });
+    </script>
+{% endblock javascript %}
+
+{% block content %}
+    <div class="jumbotron" id="main">
+        <form
+                {% if multi %}
+                    enctype="multipart/form-data"
+                {% endif %}
+                    method="post"
+                    action=".."
+        >
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+                <button type="submit" class="btn btn-primary" id="submit">Send File</button>
+            {% endbuttons %}
+        </form>
+        <div class="progress" id="progress_id">
+            <div class="progress-bar" style="width:0%" id="progressBar">0%</div>
+        </div>
+    </div>
+{% endblock content %}

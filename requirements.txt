@@ -1,0 +1,8 @@
+Django
+djangorestframework
+psycopg2
+pytz
+sqlparse
+python-memcached
+django-extensions
+django-jquery
